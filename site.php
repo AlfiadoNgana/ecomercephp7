@@ -2,6 +2,7 @@
     use \src\Page;
     use \src\Model\Product;
     use \src\Model\Category;
+    use \src\Model\Cart;
     $app->get("/", function(){
 
         $products= Product::listAll();
@@ -30,6 +31,12 @@
         $product->getFromUrl($desurl);
         $page = new Page();
         $page->setTpl('product-detail',['product'=>$product->getValues(),'categories'=>$product->getCategories()]);
+    });
+
+    $app->get("/cart", function(){
+        $cart = Cart::getFromSession();
+        $page = new Page();
+        $page->setTpl("cart");
     });
 
 ?>
