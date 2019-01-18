@@ -3,6 +3,8 @@
     use \src\Model\Product;
     use \src\Model\Category;
     use \src\Model\Cart;
+    use src\Model\Address;
+    use src\Model\User;
     $app->get("/", function(){
 
         $products= Product::listAll();
@@ -73,6 +75,39 @@
         $cart = Cart::getFromSession();
         $cart->setFreight($_POST['zipcode']);
         header("Location:/cart");
+        exit;
+    });
+
+    $app->get("/checkout", function(){
+        User::verifyLogin(false);
+        $cart = Cart::getFromSession();
+        $address = new Address();
+        $page = new Page();
+        $page->setTpl("checkout",[
+            'cart'=>$cart->getValues(),
+            'address'=>$address->getValues()
+        ]);
+    });
+    $app->get("/login", function(){
+        $page = new Page();
+        $page->setTpl("login",[
+            'error'=>User::getError()
+        ]);
+    });
+
+    $app->post("/login", function(){
+        try{
+            $user=User::login($_POST['login'],$_POST['password']);
+            header("Location: /checkout");
+            exit;
+        }catch(Exception $ex){
+            User::setError($ex->getMessage());
+        }
+    });
+
+    $app->get("/logout", function(){
+        User::logout();
+        header("Location: /login");
         exit;
     });
 ?>

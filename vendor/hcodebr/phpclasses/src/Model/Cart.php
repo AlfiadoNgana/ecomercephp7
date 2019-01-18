@@ -221,7 +221,7 @@
 
             $totals = $this->getProductsTotals();
 
-            $this->setvlsubtotal($totals['vlprice']);
+            $this->setvlsubtotal((float)$totals['vlprice']);
             $this->setvltotal($totals['vlprice'] + (float)$this->getvlfreight());
 
         }

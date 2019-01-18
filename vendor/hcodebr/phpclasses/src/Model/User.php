@@ -8,21 +8,27 @@
     class User extends Model{
         const SESSION="User";
         const SECRET ="HcodePhp7_Secret"; //tem que ter pelomenos 16 caracters
+        const ERROR = "UserError";
 
         public static function login($usuario, $password){
 
             $sql=new Sql();
 
-            $results = $sql->select("SELECT * FROM tb_users WHERE deslogin= :USUARIO", array(":USUARIO"=>$usuario));
+            $results = $sql->select("SELECT * FROM tb_users a INNER JOIN tb_persons b ON a.idperson = b.idperson WHERE deslogin= :USUARIO", array(":USUARIO"=>$usuario));
 
             if(count($results) === 0) throw new \Exception("Usuario inexistente ou senha Invalida");
             
             $data= $results[0];
             if(password_verify($password,$data['despassword']) ===true){
 
-                $user=new User();
+                $user = new User();
+
+                $data['desperson'] = utf8_encode($data['desperson']);
+
                 $user->setData($data);
-                $_SESSION[User::SESSION] =$user->getValues();
+
+                $_SESSION[User::SESSION] = $user->getValues();
+
                 return $user;
 
             }else{
@@ -58,7 +64,11 @@
         public static function verifyLogin($inadmin=true){
 
             if(!User::checkLogin($inadmin)){
-                header("Location: /admin/login");
+                if($inadmin){
+                    header("Location: /admin/login");
+                }else{
+                    header("Location: /login");
+                }
                 exit;
             }
         }
@@ -78,7 +88,7 @@
         public function save(){
             $sql = new Sql();
             $resultado = $sql->select("CALL sp_users_save(:desperson, :deslogin, :despassword, :desemail, :nrphone, :inadmin)", array(
-                ":desperson"=>$this->getdesperson(),
+                ":desperson"=>utf8_decode($this->getdesperson()),
                 ":deslogin"=>$this->getdeslogin(),
                 ":despassword"=>password_hash($this->getdespassword(),PASSWORD_DEFAULT,["cost"=>12]),
                 ":desemail"=>$this->getdesemail(),
@@ -96,6 +106,8 @@
             $result=$sql->select("SELECT * FROM tb_users a INNER JOIN tb_persons b USING(idperson) WHERE a.iduser=:iduser",array(
                 ":iduser"=>$iduser
             ));
+            $data = $result[0];
+            $data['desperson'] = utf8_encode($data['desperson']);
             $this->setData($result[0]);
         }
 
@@ -104,9 +116,9 @@
             $sql = new Sql();
             $resultado = $sql->select("CALL sp_usersupdate_save(:iduser,:desperson, :deslogin, :despassword, :desemail, :nrphone, :inadmin)", array(
                 ":iduser"=>$this->getiduser(),
-                ":desperson"=>$this->getdesperson(),
+                ":desperson"=>utf8_decode($this->getdesperson()),
                 ":deslogin"=>$this->getdeslogin(),
-                ":despassword"=>$this->getdespassword(),
+                ":despassword"=>password_hash($this->getdespassword(),PASSWORD_DEFAULT,["cost"=>12]),
                 ":desemail"=>$this->getdesemail(),
                 ":nrphone"=>$this->getnrphone(),
                 ":inadmin"=>$this->getinadmin()
@@ -179,6 +191,21 @@
             $sql = new Sql();
             $sql->query("UPDATE tb_users SET despassword = :newpassword WHERE iduser = :iduser", array(":newpassword"=>$password,":iduser"=>$this->getiduser()));
         }
+
+        public static function setError($msg){
+            $_SESSION[User::ERROR]=$msg;
+        }
+
+        public static function getError(){
+            $msg = (isset($_SESSION[User::ERROR]) && $_SESSION[User::ERROR]) ? $_SESSION[User::ERROR] : '';
+            User::clearError();
+            return $msg;
+        }
+
+        public static function clearError(){
+            $_SESSION[User::ERROR]=null;
+        }
+
 
     }
 
