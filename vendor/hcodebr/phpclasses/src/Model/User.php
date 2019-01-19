@@ -9,6 +9,7 @@
         const SESSION="User";
         const SECRET ="HcodePhp7_Secret"; //tem que ter pelomenos 16 caracters
         const ERROR = "UserError";
+        CONST SUCCESS = "UserSuccess";
 
         public static function login($usuario, $password){
 
@@ -210,6 +211,19 @@
             $_SESSION[User::ERROR]=null;
         }
 
+        public static function setSuccess($msg){
+            $_SESSION[User::SUCCESS]=$msg;
+        }
+
+        public static function getSuccess(){
+            $msg = (isset($_SESSION[User::SUCCESS]) && $_SESSION[User::SUCCESS]) ? $_SESSION[User::SUCCESS] : '';
+            User::clearSuccess();
+            return $msg;
+        }
+
+        public static function clearSuccess(){
+            $_SESSION[User::SUCCESS]=null;
+        }
 
     }
 
